@@ -11,14 +11,12 @@ $ rustup target add wasm32-wasi
 
 ### 2. Build
 ```
-$ cargo build --target wasm32-wasi
+$ rustc --target wasm32-wasi main.rs
 ```
-
-`wasm` file will place in `target/wasm32-wasi/debug` dir.
 
 ### 3. Run
 ```
-$ wasmtime target/wasm32-wasi/debug/rust.wasm
+$ wasmtime main.wasm
 ```
 
 [How to install wasmtime](https://wasmtime.dev/)

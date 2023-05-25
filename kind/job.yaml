@@ -1,0 +1,15 @@
+apiVersion: batch/v1
+kind: Job
+metadata:
+  name: wasmdemo
+spec:
+  template:
+    metadata:
+      annotations:
+        module.wasm.image/variant: compat
+    spec:
+      containers:
+        - image: ghcr.io/adevjoe/wasmdemo:1.0
+          name: wasmdemo
+      restartPolicy: Never
+  backoffLimit: 1

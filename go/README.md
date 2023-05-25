@@ -26,3 +26,8 @@ $ wasmtime main.wasm
 ```
 
 [How to install wasmtime](https://wasmtime.dev/)
+
+### 4. Build image
+```
+$ docker build --push -t wasmdemo .
+```

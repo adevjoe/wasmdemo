@@ -1,39 +1,36 @@
 ARG KIND_NODE_VERSION=v1.24.12
 
+# Base image
 FROM kindest/node:${KIND_NODE_VERSION} AS kind-base
 
-# We need the build to link using against same system libs as the kind image otherwise the shim won't work.
-# So use the node image here as a base and install rust on top of it.
+# Build containerd shim
 FROM kind-base AS shim-build
+
+## Install rust
 RUN curl --proto '=https' --tlsv1.2 -sSf https://sh.rustup.rs > /tmp/rustup.sh && sh /tmp/rustup.sh -y --profile=minimal
 ENV PATH="/root/.cargo/bin:${PATH}"
 RUN rustup install stable
 WORKDIR /shim
 
+## Install WasmEdge
 RUN apt-get update && apt-get install --no-install-recommends -y build-essential git clang pkg-config libsystemd-dev libdbus-glib-1-dev build-essential libelf-dev libseccomp-dev libclang-dev
 RUN curl -sSf https://raw.githubusercontent.com/WasmEdge/WasmEdge/master/utils/install.sh | bash -s -- --version=0.12.1
 
-# Fetch runwasi source code
+## Build runwasi and install shim
 RUN git clone https://github.com/containerd/runwasi.git
 RUN \
     --mount=type=cache,target=/usr/local/cargo/registry \
     --mount=type=cache,target=/shim/target \
     cd runwasi; mkdir -p /opt/shim; make build install PREFIX=/opt/shim
 
+# Copy shim
 FROM scratch AS shim
 COPY --from=shim-build /opt/shim/bin/* /
 
-
-# Reuse kind-base so we don't have to download other images...
-FROM kind-base AS kind-fetch
-ARG TARGETARCH
-ARG KIND_VERSION=v0.18.0
-RUN curl -sSLf https://kind.sigs.k8s.io/dl/${KIND_VERSION}/kind-linux-${TARGETARCH} > /root/kind && chmod +x /root/kind
-
-FROM scratch AS kind
-COPY --from=kind-fetch /root/kind /kind
-
+# Build kind node image
 FROM kind-base
+
+## change containerd config
 RUN <<EOF
 set -e
 echo '[plugins."io.containerd.grpc.v1.cri".containerd.runtimes.wasm]' >> /etc/containerd/config.toml

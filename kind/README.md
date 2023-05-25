@@ -7,7 +7,7 @@
 ## 2. Build kind node image
 
 ```shell
-$ docker build --push -t ghcr.io/adevjoe/kind-wasm:v1.24.12 .
+$ docker build --push -t ghcr.io/adevjoe/kind-wasm:v1.24.12 node
 ```
 
 ## 3. Create cluster
